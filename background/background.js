@@ -1,5 +1,12 @@
 chrome.browserAction.onClicked.addListener(() => {
-	chrome.tabs.create({url: chrome.runtime.getURL(`preferences.html`)});
+	chrome.tabs.query({active: true}, (tabs) => {
+		if (tabs[0].url.includes('zotero.org')) {
+			chrome.tabs.sendMessage(tabs[0].id, ['contentPageMessage']);
+		}
+		else {
+			chrome.tabs.create({url: chrome.runtime.getURL(`preferences.html`)});
+		}
+	});
 });
 
 var log = console.log;
