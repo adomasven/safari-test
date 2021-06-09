@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Prefs</title>
+	<style>
+		body {
+			font-size: 1em;
+		}
+		.console {
+			padding: 0 20px;
+			border-left: 1px solid #aaa;
+			min-width: 33%;
+			overflow-wrap: break-word;
+		}
+	</style>
+</head>
+<body>
+<input type="button" data-fn="testBadEncoding" value="Test Bad Encoding"/>
+<input type="button" data-fn="testCookies" value="Test Cookies"/>
+<input type="button" data-fn="testFrameResponse" value="Test Frame Response"/>
+<input type="button" data-fn="testPromiseMessaging" value="Test Promise Messaging"/>
+<input type="button" data-fn="testHeadersReceived" value="Test Headers Received"/>
+<div style="display: flex; flex-direction: row">
+	<iframe style="height: 100%" src="frame.html"></iframe>
+	<div class="output console">
+		<h3>Console output:</h3>
+	</div>
+	<div class="bg-output console">
+		<h3>Background page output:</h3>
+	</div>
+</div>
+
+<script type="text/javascript" src="inject/print-bg.js"></script>
+<script type="text/javascript" src="inject/print-console.js"></script>
+<script type="text/javascript" src="inject/promise-message.js"></script>
+<script type="text/javascript" src="inject/run-fn.js"></script>
+</body>
+</html>
