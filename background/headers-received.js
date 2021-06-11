@@ -3,12 +3,12 @@ chrome.webRequest.onHeadersReceived.addListener((details) => {
 }, {urls: ["https://httpstat.us/*"], types: ['main_frame', 'sub_frame']});
 
 function testHeadersReceived() {
-	console.log('We should receive headers for 302 and 200 requests and they should come from frame 0')
+	console.log('We should receive headers for 302 and 200 requests and they should come from frame 0 and have the correct URL')
 	console.log('Opening a tab at https://httpstat.us/302');
 	chrome.tabs.create({url: 'https://httpstat.us/302'}, (tab) => {
 		setTimeout(() => {
-			console.log('Closing the opened tab after 5s');
+			console.log('Closing the opened tab after 2s');
 			chrome.tabs.remove(tab.id);
-		}, 5000)
+		}, 2000)
 	});
 }
