@@ -14,8 +14,7 @@
 			"background/char-encoding.js",
 			"background/headers-received.js",
 			"background/cookie-test.js",
-			"background/promise-message.js",
-			"background/frame-response.js"
+			"background/promise-message.js"
 		]
 	},
 	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
