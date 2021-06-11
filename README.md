@@ -18,11 +18,11 @@ on the nature of the bug.
 ##### Failing messaging (FB9154679)
 
 One of the tests involves a `manifest.json` change. Replace `manifest.json` with
-`manifest.json-broken`. The test page will still work in Firefox but will
-become completely broken in Safari. This is because if you add a content script
-in `manifest.json` then message listeners on internal extension pages break.
-If you go to https://www.zotero.org and press the extension button, note that
-message listeners for the content page still work.
+`manifest.json-broken`, or copy in the `content_scripts` property. The test page
+will still work in Firefox but will become completely broken in Safari. This is
+because if you add a content script in `manifest.json` then message listeners on
+internal extension pages break. If you go to https://www.zotero.org and press
+the extension button, note that message listeners for the content page still work.
 
 ##### Bad character encoding (FB9154698)
 
