@@ -24,11 +24,13 @@ in `manifest.json` then message listeners on internal extension pages break.
 If you go to https://www.zotero.org and press the extension button, note that
 message listeners for the content page still work.
 
-##### Bad symbol encoding (FB9154698)
+##### Bad character encoding (FB9154698)
 
-If you run console.log() or attempt to send via the messaging system string literals
-which include non-ASCII symbols from the background page they come out garbled. Use
-`Test Bad Encoding` to reproduce the bug and see `background/char-encoding.js`
+In a background script saved as UTF-8, if you run console.log() or attempt to
+send via the messaging system string literals that include Unicode characters,
+they can come out garbled. Adding a UTF-8 BOM to the file fixes it, but Chrome
+and Firefox interpret as UTF-8 without that. Use `Test Bad Encoding`
+to reproduce and see `background/char-encoding.js`
 
 ##### HTTP-Only cookies not available to extensions (FB9154760)
 
