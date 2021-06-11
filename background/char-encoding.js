@@ -1,3 +1,3 @@
 function testBadEncoding() {
-	console.log("Logging non-asci literals which should be unmangled: ✕’ąŠ");
+	console.log("Logging non-ASCII literals, which should be unmangled: ✕’ąŠ");
 }
