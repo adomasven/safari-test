@@ -14,8 +14,7 @@
 			"background/char-encoding.js",
 			"background/headers-received.js",
 			"background/cookie-test.js",
-			"background/promise-message.js",
-			"background/frame-response.js"
+			"background/promise-message.js"
 		]
 	},
 	"content_scripts": [{
