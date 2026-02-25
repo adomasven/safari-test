@@ -1,9 +1,9 @@
 ### Safari bug samples
 
-This is a Web Extension that showcases various bugs
+This is a Web Extension (manifest v3) that showcases various bugs
 in the Safari extension API. Load the extension in Firefox and click
 on the extension button, which will open the test runner page.
- 
+
 For Safari use
 ```
 xcrun safari-web-extension-converter ./safari-test
@@ -15,20 +15,13 @@ See files in `background` and `inject` for code. Some tests have
 corresponding files in both folders, others just in one, depending
 on the nature of the bug.
 
-##### Failing messaging (FB9154679)
+##### Bad symbol encoding (FB9154698) - FIXED
 
-One of the tests involves a `manifest.json` change. Replace `manifest.json` with
-`manifest.json-broken`. The test page will still work in Firefox but will
-become completely broken in Safari. This is because if you add a content script
-in `manifest.json` then message listeners on internal extension pages break.
-If you go to https://www.zotero.org and press the extension button, note that
-message listeners for the content page still work.
-
-##### Bad symbol encoding (FB9154698)
-
-If you run console.log() or attempt to send via the messaging system string literals
+~~If you run console.log() or attempt to send via the messaging system string literals
 which include non-ASCII symbols from the background page they come out garbled. Use
-`Test Bad Encoding` to reproduce the bug and see `background/char-encoding.js`
+`Test Bad Encoding` to reproduce the bug and see `background/char-encoding.js`~~
+
+This bug has been fixed.
 
 ##### HTTP-Only cookies not available to extensions (FB9154760)
 
@@ -37,12 +30,14 @@ in a background page HTTP-only cookies are not sent, i.e. the background page is
 not considered same-origin to pages where the extension has permissions to be active.
 Use `Test Cookies` to reproduce the bug and see `background/cookie-test.js`.
 
-##### `browser.runtime.onMessage` listener does not support Promise responses (FB8735852)
+##### `browser.runtime.onMessage` listener does not support Promise responses (FB8735852) - FIXED
 
-If a `browser.runtime.onMessage` callback returns a promise then the message sender should
+~~If a `browser.runtime.onMessage` callback returns a promise then the message sender should
 receive the result of the promise resolution. Instead `undefined` is immediately returned
 to the message sender. Use `Test Promise Messaging` to reproduce the bug and see
-`background/promise-message.js` and `inject/promise-message.js`.
+`background/promise-message.js` and `inject/promise-message.js`.~~
+
+This bug has been fixed.
 
 ##### `browser.webRequest.headersReceived` top frame ID not reported as 0 (FB8735832)
 

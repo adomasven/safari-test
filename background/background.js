@@ -1,4 +1,11 @@
-chrome.browserAction.onClicked.addListener(() => {
+importScripts(
+	'char-encoding.js',
+	'headers-received.js',
+	'cookie-test.js',
+	'promise-message.js'
+);
+
+chrome.action.onClicked.addListener(() => {
 	chrome.tabs.query({active: true}, (tabs) => {
 		if (tabs[0].url.includes('zotero.org')) {
 			chrome.tabs.sendMessage(tabs[0].id, ['contentPageMessage']);
@@ -18,5 +25,5 @@ console.log = function(message) {
 }
 
 chrome.runtime.onMessage.addListener((request) => {
-	window[request]();
+	self[request]();
 });
