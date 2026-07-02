@@ -12,9 +12,11 @@
 		"scripts": [
 			"background/background.js",
 			"background/headers-received.js",
-			"background/cookie-test.js"
+			"background/cookie-test.js",
+			"background/frame-message.js"
 		]
 	},
+	"web_accessible_resources": ["frame-message.html"],
 	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
 	"options_ui": {
 		"page": "preferences.html",

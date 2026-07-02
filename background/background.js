@@ -18,5 +18,9 @@ console.log = function(message) {
 }
 
 chrome.runtime.onMessage.addListener((request) => {
+	if (typeof request !== 'string') {
+		return;
+	}
+
 	window[request]();
 });

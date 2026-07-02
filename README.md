@@ -39,6 +39,14 @@ to the message sender. Use `Test Promise Messaging` to reproduce the bug and see
 
 This bug has been fixed.
 
+##### `browser.tabs.sendMessage` does not receive responses from injected extension frames
+
+If an extension injects a web-accessible extension HTML page as a frame into a normal web page,
+that frame can appear in `browser.webNavigation.getAllFrames`, but `browser.tabs.sendMessage`
+does not receive its response. This happens both when broadcasting to all frames in the tab and
+when targeting the injected extension frame by `frameId`. Use `Test Frame Message` to reproduce
+and see `background/frame-message.js`, `frame-message.html`, and `inject/frame-message.js`.
+
 ##### `browser.webRequest.headersReceived` top frame ID not reported as 0 (FB8735832)
 
 ~~`browser.webRequest.headersReceived` (and other `webRequest`) handlers for top frame receive
