@@ -1,4 +1,4 @@
-async function testCookies() {
+﻿async function testCookies() {
 	console.log('Testing whether background fetch sends cookies');
 
 	// Set a Strict cookie

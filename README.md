@@ -1,7 +1,7 @@
 ### Safari bug samples
 
-This is a Web Extension (manifest v3) that showcases various bugs
-in the Safari extension API. Load the extension in Firefox and click
+This is a Web Extension that showcases various bugs
+in the Safari extension API. Load the extension in Chrome and click
 on the extension button, which will open the test runner page.
 
 For Safari use
@@ -41,12 +41,19 @@ This bug has been fixed.
 
 ##### `browser.webRequest.headersReceived` top frame ID not reported as 0 (FB8735832)
 
-`browser.webRequest.headersReceived` (and other `webRequest`) handlers for top frame receive
+~~`browser.webRequest.headersReceived` (and other `webRequest`) handlers for top frame receive
 a random number at `details.frameId` instead of 0 as per the spec. Use `Test Headers Received`
-to reproduce and see `background/headers-received.js`.
+to reproduce and see `background/headers-received.js`.~~
+
+This bug has been fixed
 
 ##### `browser.webRequest.headersReceived` `details.url` is wrong after a 302 redirect (FB9154838)
 
 `browser.webRequest.headersReceived` handlers receive the wrong URL (pre-redirect) for the
-200 request directly after a 302 redirect. Use `Test Headers Received`
-to reproduce and see `background/headers-received.js`.
+200 request directly after a 302 redirect. Use `Test Headers Received` to reproduce and see
+`background/headers-received.js`.
+
+##### `browser.webRequest.headersReceived` event is not triggered for navigations from newtab page
+
+If you open a new tab and navigate to any page, headersReceived events for the initial navigation
+are not triggered. They are triggered for subsequent navigations on that tab.
