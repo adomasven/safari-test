@@ -9,8 +9,7 @@
 		}
 		.console {
 			padding: 0 20px;
-			border-left: 1px solid #aaa;
-			min-width: 33%;
+			min-width: 50%;
 			overflow-wrap: break-word;
 		}
 	</style>
@@ -22,16 +21,12 @@
 <input type="button" data-fn="testHeadersReceived" value="Test Headers Received"/>
 <input type="button" data-fn="testFrameMessage" value="Test Frame Message"/>
 <div class="flexbox" style="display: flex; flex-direction: row">
-	<div class="output console">
-		<h3>Console output:</h3>
-	</div>
 	<div class="bg-output console">
-		<h3>Background page output:</h3>
+		<h3>Output:</h3>
 	</div>
 </div>
 
 <script type="text/javascript" src="inject/print-bg.js"></script>
-<script type="text/javascript" src="inject/print-console.js"></script>
 <script type="text/javascript" src="inject/run-fn.js"></script>
 </body>
 </html>

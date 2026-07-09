@@ -10,7 +10,6 @@ function clearConsoleOutput(selector) {
 }
 
 function clearTestOutput() {
-	clearConsoleOutput('.output');
 	clearConsoleOutput('.bg-output');
 }
 
