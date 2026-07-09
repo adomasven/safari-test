@@ -1,3 +1,19 @@
+function escapeHTML(value) {
+	return value.replace(/[&<>"']/g, (character) => {
+		return {
+			'&': '&amp;',
+			'<': '&lt;',
+			'>': '&gt;',
+			'"': '&quot;',
+			"'": '&#39;'
+		}[character];
+	});
+}
+
+function formatRawOutput(label, value) {
+	return `<pre style="white-space: pre-wrap; margin: 0">${label}: ${escapeHTML(value)}</pre>`;
+}
+
 function testI18nPlaceholders() {
 	console.log('Testing browser.i18n.getMessage() with placeholders adjacent to double quotes');
 
@@ -25,8 +41,8 @@ function testI18nPlaceholders() {
 	for (let test of tests) {
 		let actual = chrome.i18n.getMessage(test.message, test.substitutions);
 		console.log(`${test.name}:`);
-		console.log(`  expected: ${test.expected}`);
-		console.log(`  actual:   ${actual}`);
+		console.log(formatRawOutput('expected', test.expected));
+		console.log(formatRawOutput('actual', actual));
 		console.log(`  result:   ${formatTestResult(actual === test.expected)}`);
 	}
 }
