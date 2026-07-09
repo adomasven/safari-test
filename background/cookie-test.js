@@ -12,6 +12,10 @@ function getCookies(details) {
 	return new Promise((resolve) => chrome.cookies.getAll(details, resolve));
 }
 
+function getCookieStores() {
+	return new Promise((resolve) => chrome.cookies.getAllCookieStores(resolve));
+}
+
 function removeCookie(details) {
 	return new Promise((resolve) => chrome.cookies.remove(details, resolve));
 }
@@ -96,16 +100,64 @@ async function testCookieRetrieval() {
 		let testRun = createCookieTestRun();
 		await setBrowserCookies(testRun);
 
+		let matchesTestCookie = (cookie) => cookie.name === COOKIE_RETRIEVAL_NAME && cookie.value === testRun.retrievalValue;
+
 		let byUrl = await getCookies({url: COOKIE_TEST_URL});
 		let byDomain = await getCookies({domain: 'setcookie.net'});
-		let expectedByUrl = byUrl.some((cookie) => cookie.name === COOKIE_RETRIEVAL_NAME && cookie.value === testRun.retrievalValue);
-		let expectedByDomain = byDomain.some((cookie) => cookie.name === COOKIE_RETRIEVAL_NAME && cookie.value === testRun.retrievalValue);
 
 		logCookieNames('cookies.getAll({url}) returned', byUrl);
-		console.log(`cookies.getAll({url}) result: ${formatTestResult(expectedByUrl)}`);
+		console.log(`cookies.getAll({url}) result: ${formatTestResult(byUrl.some(matchesTestCookie))}`);
 
 		logCookieNames('cookies.getAll({domain}) returned', byDomain);
-		console.log(`cookies.getAll({domain}) result: ${formatTestResult(expectedByDomain)}`);
+		console.log(`cookies.getAll({domain}) result: ${formatTestResult(byDomain.some(matchesTestCookie))}`);
+
+		console.log('Testing workaround: cookies.getAll() with explicit storeId for each cookie store');
+		let stores;
+		try {
+			stores = await withTimeout(getCookieStores(), 5000, 'cookies.getAllCookieStores()');
+		}
+		catch (e) {
+			console.log(`cookies.getAllCookieStores() failed: ${e.message}`);
+			stores = null;
+		}
+
+		if (!stores || !stores.length) {
+			console.log(`cookies.getAllCookieStores() returned ${stores ? 'no stores' : 'nothing'}`);
+			console.log(`cookies.getAll({url, storeId}) result: ${formatTestResult(false)}`);
+			console.log(`cookies.getAll({domain, storeId}) result: ${formatTestResult(false)}`);
+		}
+		else {
+			console.log(`cookies.getAllCookieStores() returned ${stores.length} store(s): ${stores.map((store) => `${store.id} (tabIds: [${store.tabIds ? store.tabIds.join(', ') : ''}])`).join(', ')}`);
+
+			let byUrlWithStore = [];
+			let byDomainWithStore = [];
+			for (let store of stores) {
+				let storeCookies = await getCookies({storeId: store.id});
+				console.log(`cookies.getAll({storeId: '${store.id}'}) returned ${storeCookies.length} cookie(s) total`);
+				let urlCookies = await getCookies({url: COOKIE_TEST_URL, storeId: store.id});
+				logCookieNames(`cookies.getAll({url, storeId: '${store.id}'}) returned`, urlCookies);
+				byUrlWithStore.push(...urlCookies);
+				byDomainWithStore.push(...await getCookies({domain: 'setcookie.net', storeId: store.id}));
+			}
+
+			logCookieNames('cookies.getAll({url, storeId}) returned', byUrlWithStore);
+			console.log(`cookies.getAll({url, storeId}) result: ${formatTestResult(byUrlWithStore.some(matchesTestCookie))}`);
+
+			logCookieNames('cookies.getAll({domain, storeId}) returned', byDomainWithStore);
+			console.log(`cookies.getAll({domain, storeId}) result: ${formatTestResult(byDomainWithStore.some(matchesTestCookie))}`);
+		}
+
+		console.log('Testing workaround: unfiltered cookies.getAll({}) with manual filtering');
+		let allCookies = await getCookies({});
+		console.log(`cookies.getAll({}) returned ${allCookies.length} cookie(s)`);
+		let manuallyFiltered = allCookies.filter((cookie) => cookie.domain && cookie.domain.replace(/^\./, '').endsWith('setcookie.net'));
+		logCookieNames('cookies.getAll({}) filtered to setcookie.net', manuallyFiltered);
+		console.log(`cookies.getAll({}) manual filter result: ${formatTestResult(manuallyFiltered.some(matchesTestCookie))}`);
+
+		console.log('Testing workaround: retrying plain cookies.getAll() after the calls above');
+		let byUrlRetry = await getCookies({url: COOKIE_TEST_URL});
+		logCookieNames('cookies.getAll({url}) retry returned', byUrlRetry);
+		console.log(`cookies.getAll({url}) retry result: ${formatTestResult(byUrlRetry.some(matchesTestCookie))}`);
 	}
 	finally {
 		await clearBrowserCookies();
