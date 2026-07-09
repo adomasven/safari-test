@@ -1,13 +1,13 @@
 chrome.browserAction.onClicked.addListener(() => {
-	chrome.tabs.query({active: true}, (tabs) => {
-		if (tabs[0].url.includes('zotero.org')) {
-			chrome.tabs.sendMessage(tabs[0].id, ['contentPageMessage']);
-		}
-		else {
-			chrome.tabs.create({url: chrome.runtime.getURL(`preferences.html`)});
-		}
-	});
+	chrome.tabs.create({url: chrome.runtime.getURL('preferences.html')});
 });
+
+function formatTestResult(passed) {
+	let color = passed ? 'green' : 'red';
+	let symbol = passed ? '&#x2705;' : '&#x274C;';
+	let label = passed ? 'PASS' : 'FAIL';
+	return `<span style="color: ${color}">${symbol} ${label}</span>`;
+}
 
 var log = console.log;
 console.log = function(message) {

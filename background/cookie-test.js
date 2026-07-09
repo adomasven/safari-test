@@ -1,61 +1,113 @@
-﻿async function testCookies() {
-	console.log('Testing whether background fetch sends cookies');
+﻿const COOKIE_TEST_URL = 'https://setcookie.net/';
+const COOKIE_RETRIEVAL_NAME = 'safariTestCookieRetrieval';
 
-	// Set a Strict cookie
-	console.log("Setting SameSite=Strict cookie...");
-	await fetch("https://setcookie.net/", {
-		method: "POST",
-		headers: {"content-type": "application/x-www-form-urlencoded;charset=UTF-8"},
-		body: "name=testStrict&value=strict&path=%2F&dom=none&ss=strict&expdate=&tz=&httponly=on",
-		credentials: "include"
+function createCookieTestRun() {
+	let token = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+	return {
+		retrievalValue: `retrieval-${token}`
+	};
+}
+
+function getCookies(details) {
+	return new Promise((resolve) => chrome.cookies.getAll(details, resolve));
+}
+
+function removeCookie(details) {
+	return new Promise((resolve) => chrome.cookies.remove(details, resolve));
+}
+
+function createTab(url) {
+	return new Promise((resolve) => chrome.tabs.create({url}, resolve));
+}
+
+function removeTab(tabId) {
+	return new Promise((resolve) => chrome.tabs.remove(tabId, resolve));
+}
+
+function delay(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function withTimeout(promise, ms, label) {
+	return Promise.race([
+		promise,
+		delay(ms).then(() => {
+			throw new Error(`${label} timed out`);
+		})
+	]);
+}
+
+function executeScript(tabId, code) {
+	return new Promise((resolve, reject) => {
+		chrome.tabs.executeScript(tabId, {code}, (result) => {
+			if (chrome.runtime.lastError) {
+				reject(new Error(chrome.runtime.lastError.message));
+				return;
+			}
+			resolve(result);
+		});
 	});
+}
 
-	// Set a Lax cookie
-	console.log("Setting SameSite=Lax cookie...");
-	await fetch("https://setcookie.net/", {
-		method: "POST",
-		headers: {"content-type": "application/x-www-form-urlencoded;charset=UTF-8"},
-		body: "name=testLax&value=lax&path=%2F&dom=none&ss=lax&expdate=&tz=&httponly=on",
-		credentials: "include"
+async function withCookieTestTab(fn) {
+	let tab = await createTab(COOKIE_TEST_URL);
+	try {
+		await delay(2000);
+		return await fn(tab);
+	}
+	finally {
+		await removeTab(tab.id);
+	}
+}
+
+async function setBrowserCookies(testRun) {
+	await withCookieTestTab(async (tab) => {
+		console.log(`Setting browser cookies from a page at ${COOKIE_TEST_URL}`);
+		await executeScript(tab.id, `
+			document.cookie = ${JSON.stringify(`${COOKIE_RETRIEVAL_NAME}=${testRun.retrievalValue}; path=/; SameSite=None; Secure`)};
+		`);
 	});
+}
 
-	// Set a None cookie (requires Secure)
-	console.log("Setting SameSite=None cookie...");
-	await fetch("https://setcookie.net/", {
-		method: "POST",
-		headers: {"content-type": "application/x-www-form-urlencoded;charset=UTF-8"},
-		body: "name=testNone&value=none&path=%2F&dom=none&ss=none&expdate=&tz=&httponly=on",
-		credentials: "include"
-	});
-
-	console.log('The following cookies have been set:');
-	let cookies = await new Promise((resolve) => {
-		chrome.cookies.getAll({domain: "setcookie.net"}, resolve);
-	});
-	console.log(JSON.stringify(cookies, null, 2));
-
-	console.log("Fetching setcookie.net to check which cookies are sent...");
-	let result = await fetch('https://setcookie.net/', {credentials: 'include'});
-	let html = await result.text();
-
-	// Extract the "Received cookies" section
-	let cookiesSection = html.match(/Received cookies:<\/p><ul>(.*?)<\/ul>/s);
-	let receivedCookies = [];
-	if (cookiesSection) {
-		let cookieMatches = cookiesSection[1].matchAll(/<code>(.*?)<\/code>/g);
-		for (let match of cookieMatches) {
-			receivedCookies.push(match[1]);
-		}
+async function clearBrowserCookies() {
+	console.log('Clearing test cookies');
+	try {
+		await withTimeout(removeCookie({url: COOKIE_TEST_URL, name: COOKIE_RETRIEVAL_NAME}), 1000, `cookies.remove() for ${COOKIE_RETRIEVAL_NAME}`);
+	}
+	catch (e) {
+		console.log(`Ignoring cookies.remove() failure for ${COOKIE_RETRIEVAL_NAME}: ${e.message}`);
 	}
 
-	// Check which cookies were received
-	let hasStrict = receivedCookies.some(c => c.includes('testStrict'));
-	let hasLax = receivedCookies.some(c => c.includes('testLax'));
-	let hasNone = receivedCookies.some(c => c.includes('testNone'));
+	await withCookieTestTab(async (tab) => {
+		await executeScript(tab.id, `
+			document.cookie = ${JSON.stringify(`${COOKIE_RETRIEVAL_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=None; Secure`)};
+		`);
+	});
+}
 
-	console.log("Cookies received by server:");
-	console.log("  Strict: " + (hasStrict ? "✓" : "✕"));
-	console.log("  Lax:    " + (hasLax ? "✓" : "✕"));
-	console.log("  None:   " + (hasNone ? "✓" : "✕"));
-	console.log("Strict and Lax cookies should be ticks!");
+function logCookieNames(label, cookies) {
+	console.log(`${label}: ${cookies.length ? cookies.map((cookie) => `${cookie.name} = ${cookie.value}`).join(', ') : '(none)'}`);
+}
+
+async function testCookieRetrieval() {
+	console.log('Testing browser.cookies.getAll() for browser-stored cookies');
+	await clearBrowserCookies();
+	try {
+		let testRun = createCookieTestRun();
+		await setBrowserCookies(testRun);
+
+		let byUrl = await getCookies({url: COOKIE_TEST_URL});
+		let byDomain = await getCookies({domain: 'setcookie.net'});
+		let expectedByUrl = byUrl.some((cookie) => cookie.name === COOKIE_RETRIEVAL_NAME && cookie.value === testRun.retrievalValue);
+		let expectedByDomain = byDomain.some((cookie) => cookie.name === COOKIE_RETRIEVAL_NAME && cookie.value === testRun.retrievalValue);
+
+		logCookieNames('cookies.getAll({url}) returned', byUrl);
+		console.log(`cookies.getAll({url}) result: ${formatTestResult(expectedByUrl)}`);
+
+		logCookieNames('cookies.getAll({domain}) returned', byDomain);
+		console.log(`cookies.getAll({domain}) result: ${formatTestResult(expectedByDomain)}`);
+	}
+	finally {
+		await clearBrowserCookies();
+	}
 }

@@ -1,67 +1,78 @@
 ### Safari bug samples
 
 This is a Web Extension that showcases various bugs
-in the Safari extension API. Load the extension in Chrome and click
-on the extension button, which will open the test runner page.
+in the Safari extension API. Load the extension in Firefox and click
+on the extension button, which will open the test runner page where
+the web extension API implementation behaves as expected.
 
-For Safari use
-```
-xcrun safari-web-extension-converter ./safari-test
-```
-then open the generated project in XCode, run it, then open Safari, enable
-unsigned extensions under Develop, then click the extension button.
+For testing in Safari 26+, open Safari Settings, go to
+Developer, and use `Add Temporary Extension...` to select this directory directly.
 
 See files in `background` and `inject` for code. Some tests have
 corresponding files in both folders, others just in one, depending
 on the nature of the bug.
 
-##### Bad symbol encoding (FB9154698) - FIXED
+Capability gaps, such as unsupported DNR response-header rule conditions and
+`webNavigation.onHistoryStateUpdated`, are not included as bug tests here.
 
-~~If you run console.log() or attempt to send via the messaging system string literals
-which include non-ASCII symbols from the background page they come out garbled. Use
-`Test Bad Encoding` to reproduce the bug and see `background/char-encoding.js`~~
+##### `browser.cookies.getAll()` cannot retrieve browser-stored cookies by URL or domain
 
-This bug has been fixed.
+Test button: `Test Cookie Retrieval`
 
-##### HTTP-Only cookies not available to extensions (FB9154760)
+`browser.cookies.getAll({url})` and `browser.cookies.getAll({domain})` should return
+cookies for sites where the extension has host permissions. On Safari, the API returns
+an empty list for cookies set by a normal page. This prevents the extension from
+collecting cookies needed for attachment downloads. See `background/cookie-test.js`.
 
-The `browser.cookies` APIs do not return HTTP-only cookies. When performing an XHR
-in a background page HTTP-only cookies are not sent, i.e. the background page is
-not considered same-origin to pages where the extension has permissions to be active.
-Use `Test Cookies` to reproduce the bug and see `background/cookie-test.js`.
+Observed in Safari with a temporary extension: after setting cookies from
+`https://setcookie.net/`, both `cookies.getAll({url})` and `cookies.getAll({domain})`
+returned `(none)`. In Firefox, both calls returned the JavaScript-visible test cookies.
 
-##### `browser.runtime.onMessage` listener does not support Promise responses (FB8735852) - FIXED
+##### `browser.i18n.getMessage()` corrupts quoted positional placeholders
 
-~~If a `browser.runtime.onMessage` callback returns a promise then the message sender should
-receive the result of the promise resolution. Instead `undefined` is immediately returned
-to the message sender. Use `Test Promise Messaging` to reproduce the bug and see
-`background/promise-message.js` and `inject/promise-message.js`.~~
+Test button: `Test i18n Placeholders`
 
-This bug has been fixed.
+`browser.i18n.getMessage()` should substitute positional placeholders such as `$1`
+inside strings like `<a href="$1">More information</a>`. Safari corrupts strings
+where a positional placeholder is adjacent to a double quote, returning broken or
+empty markup. Plain text placeholders work. See `background/i18n-test.js` and
+`_locales/en/messages.json`.
+
+Observed in Safari with a temporary extension: quoted-link placeholders failed, while
+the plain `Saving $1 items` control passed.
+
+##### JavaScript source files without a UTF-8 BOM are decoded incorrectly
+
+Test button: `Test UTF-8 Source Without BOM`
+
+Safari misdecodes non-ASCII JavaScript string literals in extension source files that
+do not start with a UTF-8 BOM. This requires an additional build step that prepends
+a BOM to generated Safari extension JavaScript files. See `background/utf8-bom-test.js`.
+
+Observed in Safari with a temporary extension: the expected escaped string
+`✕’ąŠ` differed from the literal loaded from a non-BOM JavaScript source file, which
+was displayed as mojibake.
 
 ##### `browser.tabs.sendMessage` does not receive responses from injected extension frames
+
+Test button: `Test Frame Message`
 
 If an extension injects a web-accessible extension HTML page as a frame into a normal web page,
 that frame can appear in `browser.webNavigation.getAllFrames`, but `browser.tabs.sendMessage`
 does not receive its response. This happens both when broadcasting to all frames in the tab and
-when targeting the injected extension frame by `frameId`. Use `Test Frame Message` to reproduce
-and see `background/frame-message.js`, `frame-message.html`, and `inject/frame-message.js`.
-
-##### `browser.webRequest.headersReceived` top frame ID not reported as 0 (FB8735832)
-
-~~`browser.webRequest.headersReceived` (and other `webRequest`) handlers for top frame receive
-a random number at `details.frameId` instead of 0 as per the spec. Use `Test Headers Received`
-to reproduce and see `background/headers-received.js`.~~
-
-This bug has been fixed
+when targeting the injected extension frame by `frameId`. See `background/frame-message.js`,
+`frame-message.html`, and `inject/frame-message.js`.
 
 ##### `browser.webRequest.headersReceived` `details.url` is wrong after a 302 redirect (FB9154838)
 
+Test button: `Test Headers Received`
+
 `browser.webRequest.headersReceived` handlers receive the wrong URL (pre-redirect) for the
-200 request directly after a 302 redirect. Use `Test Headers Received` to reproduce and see
-`background/headers-received.js`.
+200 request directly after a 302 redirect. See `background/headers-received.js`.
 
 ##### `browser.webRequest.headersReceived` event is not triggered for navigations from newtab page
+
+Test button: `Test Headers Received`
 
 If you open a new tab and navigate to any page, headersReceived events for the initial navigation
 are not triggered. They are triggered for subsequent navigations on that tab.

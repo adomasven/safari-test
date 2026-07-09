@@ -2,6 +2,7 @@
 	"name": "Safari Test",
 	"manifest_version": 2,
 	"version": "1.0",
+	"default_locale": "en",
 	"permissions": ["http://*/*", "https://*/*", "tabs", "cookies", 
 		"webRequest", "webNavigation"],
 	"browser_action": {
@@ -13,7 +14,9 @@
 			"background/background.js",
 			"background/headers-received.js",
 			"background/cookie-test.js",
-			"background/frame-message.js"
+			"background/frame-message.js",
+			"background/i18n-test.js",
+			"background/utf8-bom-test.js"
 		]
 	},
 	"web_accessible_resources": ["frame-message.html"],

@@ -1,0 +1,11 @@
+{
+	"i18n_linkWithPlaceholder": {
+		"message": "<a href=\"$1\">More information</a>"
+	},
+	"i18n_twoQuotedPlaceholders": {
+		"message": "<a target=\"_blank\" href=\"$1\">$2</a>"
+	},
+	"i18n_plainPlaceholder": {
+		"message": "Saving $1 items"
+	}
+}
