@@ -28,6 +28,17 @@ Observed in Safari with a temporary extension: after setting cookies from
 `https://setcookie.net/`, both `cookies.getAll({url})` and `cookies.getAll({domain})`
 returned `(none)`. In Firefox, both calls returned the JavaScript-visible test cookies.
 
+Workaround: enumerating cookie stores with `cookies.getAllCookieStores()` and passing
+an explicit `storeId` to `cookies.getAll()` returns the expected cookies. Safari
+reported two stores: `persistent-1` (the default data store, 0 cookies, no tabs) and
+`persistent-2` (the browsing session's store, with all browser cookies and the open
+tabs in `tabIds`). Calls without `storeId` -- including unfiltered
+`cookies.getAll({})` -- returned nothing even after successful `storeId` queries, so
+omitting `storeId` queries the empty default store rather than the store of the
+browsing session. Since store IDs other than `persistent-1` are runtime-generated
+session IDs, an extension has to select the store dynamically, e.g. by finding the
+store whose `tabIds` contains the relevant tab.
+
 ##### `browser.i18n.getMessage()` corrupts quoted positional placeholders (FB23657112)
 
 Test button: `Test i18n Placeholders (FB23657112)`
